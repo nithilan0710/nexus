@@ -352,9 +352,13 @@ textarea.fc{resize:vertical;min-height:80px}
       <div class="field"><label class="flabel">Username</label><input class="finput" id="suUser" placeholder="lowercase, no spaces" autocomplete="username"></div>
       <div class="field"><label class="flabel">Mobile Number</label><input class="finput" type="tel" id="suMobile" placeholder="+91 9876543210" autocomplete="tel"></div>
       <div class="field"><label class="flabel">Email</label><input class="finput" type="email" id="suEmail" placeholder="you@example.com" autocomplete="email"></div>
-      <div class="field"><label class="flabel">Password</label><input class="finput" type="password" id="suPass" placeholder="Min. 6 characters" autocomplete="new-password"></div>
-      <div class="field"><label class="flabel">Confirm Password</label><input class="finput" type="password" id="suPassC" placeholder="Repeat password" autocomplete="new-password"></div>
-      <button class="btn-auth" id="suBtn" onclick="doSignUp()">Create Account</button>
+      <div class="field"><label class="flabel">Password</label><input class="finput" type="password" id="suPass" placeholder="Min. 6 characters" autocomplete="new-password" oninput="checkPassMatch()"></div>
+      <div class="field">
+        <label class="flabel">Confirm Password</label>
+        <input class="finput" type="password" id="suPassC" placeholder="Repeat password" autocomplete="new-password" oninput="checkPassMatch()">
+        <div id="passMatchHint" style="font-size:12px;margin-top:6px;display:none;font-family:'DM Mono',monospace"></div>
+      </div>
+      <button class="btn-auth" id="suBtn" onclick="doSignUp()" disabled style="opacity:.45;cursor:not-allowed">Create Account</button>
       <div class="auth-switch">Already have an account? <a onclick="authTab('signin')">Sign in</a></div>
     </div>
 
@@ -707,6 +711,24 @@ window.doSignIn=async()=>{
   } catch(e){authErr(fmtErr(e.code));setABtn('siBtn','Sign In');}
 };
 
+window.checkPassMatch=()=>{
+  const pass=G('suPass').value;
+  const passC=G('suPassC').value;
+  const hint=G('passMatchHint');
+  const btn=G('suBtn');
+  if(!passC){hint.style.display='none';btn.disabled=true;btn.style.opacity='.45';btn.style.cursor='not-allowed';return;}
+  if(pass===passC&&pass.length>=6){
+    hint.style.display='block';hint.style.color='var(--gr)';hint.textContent='✓ Passwords match';
+    btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';
+  } else if(pass!==passC){
+    hint.style.display='block';hint.style.color='var(--rd)';hint.textContent='✗ Passwords do not match';
+    btn.disabled=true;btn.style.opacity='.45';btn.style.cursor='not-allowed';
+  } else {
+    hint.style.display='block';hint.style.color='var(--yw)';hint.textContent='Min. 6 characters required';
+    btn.disabled=true;btn.style.opacity='.45';btn.style.cursor='not-allowed';
+  }
+};
+
 window.doSignUp=async()=>{
   const name=G('suName').value.trim();
   const uname=G('suUser').value.trim().toLowerCase().replace(/\s+/g,'');
@@ -737,7 +759,7 @@ G('siPass').addEventListener('keydown',e=>{if(e.key==='Enter')doSignIn();});
 G('suPassC').addEventListener('keydown',e=>{if(e.key==='Enter')doSignUp();});
 
 /* ── MOUNT ───────────────────────────── */
-function mountAuth(){G('authPage').style.display='grid';G('appPage').style.display='none';G('siBtn').disabled=false;G('siBtn').textContent='Sign In';G('suBtn').disabled=false;G('suBtn').textContent='Create Account';G('authErr').style.display='none';}
+function mountAuth(){G('authPage').style.display='grid';G('appPage').style.display='none';G('siBtn').disabled=false;G('siBtn').textContent='Sign In';G('suBtn').textContent='Create Account';checkPassMatch();G('authErr').style.display='none';}
 function mountApp(){
   G('authPage').style.display='none';G('appPage').style.display='block';
   const name=CU.displayName||CU.email.split('@')[0];
